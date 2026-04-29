@@ -1,0 +1,41 @@
+const express = require("express");
+const { createClient } = require("@supabase/supabase-js");
+const bodyParser = require("body-parser");
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// 🔑 Supabase
+const supabase = createClient(
+  "SUPABASE_URL",
+  "SUPABASE_KEY"
+);
+
+// 📲 Twilio webhook
+app.post("/webhook", async (req, res) => {
+  const msg = req.body.Body;
+  const from = req.body.From;
+
+  console.log("Message:", msg);
+
+  // 💾 save lead
+  await supabase.from("leads").insert([
+    {
+      name: "client",
+      phone: from,
+      city: "unknown",
+      budget: 0,
+      status: "new"
+    }
+  ]);
+
+  // 🤖 reply
+  res.set("Content-Type", "text/xml");
+  res.send(`
+    <Response>
+      <Message>مرحبا 👋 توصلنا بالرسالة ديالك، غادي نعاونك تلقى العقار المناسب</Message>
+    </Response>
+  `);
+});
+
+app.listen(3000, () => console.log("Server running 🚀"));
