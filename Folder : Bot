@@ -1,0 +1,35 @@
+const express = require("express");
+const { createClient } = require("@supabase/supabase-js");
+const bodyParser = require("body-parser");
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
+app.post("/webhook", async (req, res) => {
+  const msg = req.body.Body;
+  const from = req.body.From;
+
+  await supabase.from("leads").insert([
+    {
+      name: "client",
+      phone: from,
+      city: "unknown",
+      budget: 0,
+      status: "new"
+    }
+  ]);
+
+  res.set("Content-Type", "text/xml");
+  res.send(`
+    <Response>
+      <Message>مرحبا 👋 توصلنا بالرسالة ديالك</Message>
+    </Response>
+  `);
+});
+
+app.listen(3000);
